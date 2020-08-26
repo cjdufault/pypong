@@ -7,7 +7,7 @@ width = None
 height = None
 fore_color = (200, 200, 0)
 back_color = (0, 0, 0)
-last_collision_time = 0
+last_collision_time = 0 # to lock out collision detection for 20ms after a collision
 
 
 def main():
@@ -24,7 +24,7 @@ def play(window):
     global last_collision_time
     
     # create and draw ball and paddles
-    ball = Ball(int(width / 400), (int(width / 2), int(height / 2)), int(height / 30))
+    ball = Ball(int(width / 100), (int(width / 2), int(height / 2)), int(height / 30))
     paddle1 = Paddle((int(width * 0.05), int(height / 2)), int(height / 5))
     paddle2 = Paddle((int(width * 0.95), int(height / 2)), int(height / 5))
         
@@ -44,15 +44,29 @@ def play(window):
             ball.wall_bounce()
             last_collision_time = pygame.time.get_ticks() # last_collision_time is now
         
-        window.fill(fore_color, rect=ball.rect)
-        window.fill(fore_color, rect=paddle1.rect)
-        window.fill(fore_color, rect=paddle2.rect)
-        
-        pygame.display.update()
-        
+        # check for quit events
         quit_events = pygame.event.get(pygame.QUIT)
         if len(quit_events) > 0:
             running = False
+        
+        # handle key presses
+        keys = pygame.key.get_pressed()
+        
+        if keys[pygame.K_w] and paddle1.position[1] - (paddle1.paddle_height / 2) >= 0:
+            paddle1.move(0 - (width / 200))
+        if keys[pygame.K_s] and paddle1.position[1] + (paddle1.paddle_height / 2) <= height:
+            paddle1.move(width / 200)
+
+        if keys[pygame.K_UP] and paddle2.position[1] - (paddle2.paddle_height / 2) >= 0:
+            paddle2.move(0 - (width / 200))
+        if keys[pygame.K_DOWN] and paddle2.position[1] + (paddle2.paddle_height / 2) <= height:
+            paddle2.move(width / 200)
+                             
+        # draw everything and update display
+        window.fill(fore_color, rect=ball.rect)
+        window.fill(fore_color, rect=paddle1.rect)
+        window.fill(fore_color, rect=paddle2.rect)
+        pygame.display.update()
             
 
 def check_collide(ball, paddle):
@@ -71,7 +85,6 @@ def check_collide(ball, paddle):
         
         last_collision_time = pygame.time.get_ticks() # last_collision_time is now
         
-    
 
 # returns a window for the game
 def init_display(title):
@@ -142,6 +155,10 @@ class Paddle:
         self.position = init_position                       # tuple that represents current position of paddle
         self.paddle_height = int(paddle_height)             # height of paddle
         self.paddle_width = int(self.paddle_height * 0.15)  # width is 10% of height
+        self.set_rect()
+        
+    def move(self, distance):
+        self.position = self.position[0], self.position[1] + distance
         self.set_rect()
     
     def reset_paddle(self):
