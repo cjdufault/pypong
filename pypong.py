@@ -1,5 +1,6 @@
 import pygame
-import os
+from os import path, environ
+#import os
 
 
 running = True
@@ -7,7 +8,8 @@ width = None
 height = None
 fore_color = (200, 200, 0)
 back_color = (0, 0, 0)
-last_collision_time = 0 # to lock out collision detection for 20ms after a collision
+last_collision_time = 0 # to lock out collision detection for 100ms after a collision
+collision_lockout = 100
 
 
 def main():
@@ -17,10 +19,6 @@ def main():
 
 def play(window):
     global running
-    global width
-    global height
-    global fore_color
-    global back_color
     global last_collision_time
     
     # create and draw ball and paddles
@@ -40,9 +38,8 @@ def play(window):
         ball.step_position()
         check_collide(ball, paddle1)
         check_collide(ball, paddle2)
-        if ball.position[1] - (ball.size / 2) <= 0 or ball.position[1] + (ball.size / 2) >= height and pygame.time.get_ticks() - last_collision_time > 20:
+        if ball.position[1] - (ball.size / 2) <= 0 or ball.position[1] + (ball.size / 2) >= height:
             ball.wall_bounce()
-            last_collision_time = pygame.time.get_ticks() # last_collision_time is now
         
         # check for quit events
         quit_events = pygame.event.get(pygame.QUIT)
@@ -52,15 +49,17 @@ def play(window):
         # handle key presses
         keys = pygame.key.get_pressed()
         
-        if keys[pygame.K_w] and paddle1.position[1] - (paddle1.paddle_height / 2) >= 0:
-            paddle1.move(0 - (width / 200))
-        if keys[pygame.K_s] and paddle1.position[1] + (paddle1.paddle_height / 2) <= height:
-            paddle1.move(width / 200)
+        # paddle1 keys
+        if keys[pygame.K_w] and paddle1.position[1] - (paddle1.paddle_height / 2) >= 0:         # move up
+            paddle1.move(0 - (width / 150))
+        if keys[pygame.K_s] and paddle1.position[1] + (paddle1.paddle_height / 2) <= height:    # move down
+            paddle1.move(width / 150)
 
-        if keys[pygame.K_UP] and paddle2.position[1] - (paddle2.paddle_height / 2) >= 0:
-            paddle2.move(0 - (width / 200))
-        if keys[pygame.K_DOWN] and paddle2.position[1] + (paddle2.paddle_height / 2) <= height:
-            paddle2.move(width / 200)
+        # paddle2 keys
+        if keys[pygame.K_UP] and paddle2.position[1] - (paddle2.paddle_height / 2) >= 0:        # move up
+            paddle2.move(0 - (width / 150))
+        if keys[pygame.K_DOWN] and paddle2.position[1] + (paddle2.paddle_height / 2) <= height: # move down
+            paddle2.move(width / 150)
                              
         # draw everything and update display
         window.fill(fore_color, rect=ball.rect)
@@ -72,7 +71,7 @@ def play(window):
 def check_collide(ball, paddle):
     global last_collision_time
     
-    if paddle.rect.colliderect(ball.rect) and pygame.time.get_ticks() - last_collision_time > 20:
+    if paddle.rect.colliderect(ball.rect) and pygame.time.get_ticks() - last_collision_time > collision_lockout:
         # get position of ball and paddle in the y-axis, plus the height of the paddle
         ball_position_y = ball.position[1]
         paddle_position_y = paddle.position[1]
@@ -80,7 +79,7 @@ def check_collide(ball, paddle):
         
         # calculate the difference between the y-axis position of ball and paddle, and use that to determine how much the ball will deflect
         offset = ball_position_y - paddle_position_y
-        deflect_value = offset / (paddle_height / 2)
+        deflect_value = offset / ((paddle_height / 2) * 1.5)
         ball.paddle_bounce(deflect_value)   # call the paddle_bounce() function to change the ball's direction based on the deflect_value
         
         last_collision_time = pygame.time.get_ticks() # last_collision_time is now
@@ -91,13 +90,13 @@ def init_display(title):
     global width
     global height
     
-    os.environ["SDL_VIDEO_CENTERED"] = "1"  # centers window in screen
+    environ["SDL_VIDEO_CENTERED"] = "1"  # centers window in screen
     pygame.init()
     display_info = pygame.display.Info()    # object with display info
     pygame.display.set_caption(title)       # set title
     
     # load and set icon
-    icon = pygame.image.load(os.path.join("assets", "pypong_icon.png"))
+    icon = pygame.image.load(path.join("assets", "pypong_icon.png"))
     pygame.display.set_icon(icon)
     
     # set window size w/ info from display_info
@@ -129,9 +128,9 @@ class Ball:
     # changes x_spd & y_spd based on angle leaving the paddle
     def paddle_bounce(self, deflect_value):
         if self.x_spd > 0:
-            self.x_spd = 0 - (self.speed * (1 - deflect_value))
+            self.x_spd = 0 - (self.speed * (1 - abs(deflect_value)))
         else:
-            self.x_spd = self.speed * (1 - deflect_value)
+            self.x_spd = self.speed * (1 - abs(deflect_value))
         
         if self.y_spd > 0:
             self.y_spd = 0 - (self.speed * deflect_value)
@@ -154,7 +153,7 @@ class Paddle:
         self.init_position = init_position                  # tuple that represents starting position of paddle
         self.position = init_position                       # tuple that represents current position of paddle
         self.paddle_height = int(paddle_height)             # height of paddle
-        self.paddle_width = int(self.paddle_height * 0.15)  # width is 10% of height
+        self.paddle_width = int(self.paddle_height * 0.15)  # width is 15% of height
         self.set_rect()
         
     def move(self, distance):
