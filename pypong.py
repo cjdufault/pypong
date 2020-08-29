@@ -23,9 +23,9 @@ def play(window):
     global last_collision_time
     
     # create and draw ball and paddles
-    ball = Ball(int(width / 100), (int(width / 2), int(height / 2)), int(height / 30))
-    paddle1 = Paddle((int(width * 0.05), int(height / 2)), int(height / 5))
-    paddle2 = Paddle((int(width * 0.95), int(height / 2)), int(height / 5))
+    ball = Ball(width * 0.01, (width / 2, height * 0.5), height / 30)
+    paddle1 = Paddle((width * 0.05, height * 0.5), height / 5)
+    paddle2 = Paddle((width * 0.95, height * 0.5), height / 5)
     object_list = [ball, paddle1, paddle2]
         
     while running:
@@ -70,7 +70,7 @@ def check_collide(ball, paddle):
         
         # calculate the difference between the y-axis position of ball and paddle, and use that to determine how much the ball will deflect
         offset = ball_position_y - paddle_position_y
-        deflect_value = offset / ((paddle_height / 2) * 1.5)
+        deflect_value = abs(offset / ((paddle_height / 2) * 1.5))
         ball.paddle_bounce(deflect_value)   # call the paddle_bounce() function to change the ball's direction based on the deflect_value
         
         last_collision_time = pygame.time.get_ticks() # last_collision_time is now
@@ -167,13 +167,13 @@ def listen_for_quit():
 
 class Ball:
     def __init__(self, speed, init_position, size):
-        self.speed = speed                  # total speed
-        self.x_spd = speed                  # x-component of total speed, initially equal to total speed
-        self.y_spd = 0                      # y-component of total speed, initially 0
-        self.init_position = init_position  # initial position, expressed as (int, int)
-        self.position = init_position       # tuple representing current position
-        self.size = int(size)               # ball is a square, and size is the length in px of each side
-        self.set_rect()                     # rectangle representing the space occupied by the ball onscreen
+        self.speed = int(speed)                                             # total speed
+        self.x_spd = self.speed                                             # x-component of total speed, initially equal to total speed
+        self.y_spd = 0                                                      # y-component of total speed, initially 0
+        self.init_position = int(init_position[0]) , int(init_position[1])  # initial position, expressed as (int, int)
+        self.position = self.init_position                                  # tuple representing current position
+        self.size = int(size)                                               # ball is a square, and size is the length in px of each side
+        self.set_rect()                                                     # rectangle representing the space occupied by the ball onscreen
         
     # updates the position and corresponding rect for the ball
     def step_position(self):
@@ -187,14 +187,14 @@ class Ball:
     # changes x_spd & y_spd based on angle leaving the paddle
     def paddle_bounce(self, deflect_value):
         if self.x_spd > 0:
-            self.x_spd = 0 - (self.speed * (1 - abs(deflect_value)))
+            self.x_spd = 0 - (self.speed * (1 - deflect_value))
         else:
-            self.x_spd = self.speed * (1 - abs(deflect_value))
+            self.x_spd = self.speed * (1 - deflect_value)
         
         if self.y_spd > 0:
-            self.y_spd = 0 - (self.speed * deflect_value)
-        else:
             self.y_spd = self.speed * deflect_value
+        else:
+            self.y_spd = 0 - (self.speed * deflect_value)
     
     # resets position and speed of ball to initial values
     def reset_ball(self):
@@ -210,10 +210,10 @@ class Ball:
 
 class Paddle:
     def __init__(self, init_position, paddle_height):
-        self.init_position = init_position                  # tuple that represents starting position of paddle
-        self.position = init_position                       # tuple that represents current position of paddle
-        self.paddle_height = int(paddle_height)             # height of paddle
-        self.paddle_width = int(self.paddle_height * 0.15)  # width is 15% of height
+        self.init_position = int(init_position[0]), int(init_position[1])   # tuple that represents starting position of paddle
+        self.position = self.init_position                                  # tuple that represents current position of paddle
+        self.paddle_height = int(paddle_height)                             # height of paddle
+        self.paddle_width = int(self.paddle_height * 0.15)                  # width is 15% of height
         self.set_rect()
         
     def move(self, distance):
