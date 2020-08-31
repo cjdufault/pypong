@@ -164,9 +164,11 @@ def game_over(window):
     else:
         img = assets["p2_wins"]
         
+    # show the image that says who won
     window.blit(pygame.transform.scale(img, (width, height)), window.get_rect())
     pygame.display.update()
     
+    # if player presses y, restart, quit if they press n
     while restart:
         listen_for_quit()
         
