@@ -2,7 +2,8 @@ import pygame
 from os import path, environ
 
 
-running = True
+running = None
+restart = None
 width = None
 height = None
 fore_color = (200, 200, 0)
@@ -11,8 +12,8 @@ last_collision_time = 0 # to lock out collision detection for 100ms after a coll
 collision_lockout = 100
 assets = {}
 score_dict = {0: "0", 1: "15", 2: "30", 3: "40"} # to lookup what score corresponds to a given number of points
-player1_score = 0
-player2_score = 0
+player1_score = None
+player2_score = None
 
 
 class Ball:
@@ -82,13 +83,42 @@ class Paddle:
 
 
 def main():
+    global running
+    global restart
+    
     load_assets()
     window = init_display("PyPong")
-    play(window)
+    restart = True
+    
+    while restart:
+        running = True
+        
+        title_screen(window)
+        play(window)
+        if restart:
+            restart = game_over(window)
+
+
+def title_screen(window):
+    window.blit(pygame.transform.scale(assets["title"], (width, height)), window.get_rect())
+    pygame.display.update()
+    
+    while running:        
+        # start the game if space is pressed
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_SPACE]:
+            window.fill(back_color)
+            break
+        listen_for_quit()
     
 
 def play(window):
     global last_collision_time
+    global player1_score
+    global player2_score
+    
+    player1_score = 0
+    player2_score = 0
     
     ball_speed = width * 0.012
     
@@ -126,7 +156,26 @@ def play(window):
         draw_objects(window, object_list, fore_color)
         pygame.display.update()
         pygame.event.clear()
-            
+        
+        
+def game_over(window):
+    if player1_score > player2_score:
+        img = assets["p1_wins"]
+    else:
+        img = assets["p2_wins"]
+        
+    window.blit(pygame.transform.scale(img, (width, height)), window.get_rect())
+    pygame.display.update()
+    
+    while restart:
+        listen_for_quit()
+        
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_y]:
+            return True
+        elif keys[pygame.K_n]:
+            return False
+                    
 
 def check_collide(ball, paddle):
     global last_collision_time
@@ -282,33 +331,38 @@ def init_display(title):
 
 def listen_for_quit():
     global running
+    global restart
     
     quit_events = pygame.event.get(pygame.QUIT)
     if len(quit_events) > 0:
         running = False
+        restart = False
         
 
 def load_assets():
     global assets
     
     # all images to be loaded and their paths
-    img_paths = {"icon":      path.join("assets", "pypong_icon.png"),
-                 "0_b":       path.join("assets", "0_b.png"),
-                 "0_y":       path.join("assets", "0_y.png"),
-                 "15_b":      path.join("assets", "15_b.png"),
-                 "15_y":      path.join("assets", "15_y.png"),
-                 "30_b":      path.join("assets", "30_b.png"),
-                 "30_y":      path.join("assets", "30_y.png"),
-                 "40_b":      path.join("assets", "40_b.png"),
-                 "40_y":      path.join("assets", "40_y.png"),
-                 "deuce_b":   path.join("assets", "deuce_b.png"),
-                 "deuce_y":   path.join("assets", "deuce_y.png"),
-                 "adin_b":    path.join("assets", "adin_b.png"),
-                 "adin_y":    path.join("assets", "adin_y.png"),
-                 "adout_b":   path.join("assets", "adout_b.png"),
-                 "adout_y":   path.join("assets", "adout_y.png"),
-                 "dash_b":    path.join("assets", "dash_b.png"),
-                 "dash_y":    path.join("assets", "dash_y.png")}
+    img_paths = {"icon":    path.join("assets", "pypong_icon.png"),
+                 "title":   path.join("assets", "pypong_title.png"),
+                 "p1_wins": path.join("assets", "player1_wins.png"),
+                 "p2_wins": path.join("assets", "player2_wins.png"),
+                 "0_b":     path.join("assets", "0_b.png"),
+                 "0_y":     path.join("assets", "0_y.png"),
+                 "15_b":    path.join("assets", "15_b.png"),
+                 "15_y":    path.join("assets", "15_y.png"),
+                 "30_b":    path.join("assets", "30_b.png"),
+                 "30_y":    path.join("assets", "30_y.png"),
+                 "40_b":    path.join("assets", "40_b.png"),
+                 "40_y":    path.join("assets", "40_y.png"),
+                 "deuce_b": path.join("assets", "deuce_b.png"),
+                 "deuce_y": path.join("assets", "deuce_y.png"),
+                 "adin_b":  path.join("assets", "adin_b.png"),
+                 "adin_y":  path.join("assets", "adin_y.png"),
+                 "adout_b": path.join("assets", "adout_b.png"),
+                 "adout_y": path.join("assets", "adout_y.png"),
+                 "dash_b":  path.join("assets", "dash_b.png"),
+                 "dash_y":  path.join("assets", "dash_y.png")}
     
     for img_name in img_paths:
         try:
