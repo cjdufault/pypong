@@ -10,7 +10,7 @@ back_color = (0, 0, 0)
 last_collision_time = 0 # to lock out collision detection for 100ms after a collision
 collision_lockout = 100
 assets = {}
-score_dict = {0: "0", 1: "15", 2: "30", 3: "40"}
+score_dict = {0: "0", 1: "15", 2: "30", 3: "40"} # to lookup what score corresponds to a given number of points
 player1_score = 0
 player2_score = 0
 
@@ -190,36 +190,49 @@ def score_animation(window, ball, paddle1, paddle2):
 def show_score(window, negative=False):
     global running
     
+    # if negative, scores will be displayed in black
     suffix = "_y"
     if negative:
         suffix = "_b"
         
-    score_root = int(width * 0.45), int(height * 0.95)
+    # where on the screen the scores will be displayed
+    score_root = int(width * 0.45), int(height * 0.92)
     
-    #TODO: comment on this mess
+    # if both players are past 40 (3 points)
     if player1_score >= 3 and player2_score >= 3:
-        img_dimensions = (int(width * 0.15), int(height * 0.05))
+        img_dimensions = (int(width * 0.15), int(height * 0.08))
         
+        # if players are at or past 40 (3 points) and tied
         if player1_score == player2_score:
             img = pygame.transform.scale(assets["deuce" + suffix], img_dimensions)
+            
+        # if one player has won
         elif player1_score - player2_score >= 2 or player2_score - player1_score >= 2:
             running = False
             return
+        
+        # display ad-in or ad-out, depending on which player is ahead
         elif player1_score > player2_score:
             img = pygame.transform.scale(assets["adin" + suffix], img_dimensions)
         elif player2_score > player1_score:
             img = pygame.transform.scale(assets["adout" + suffix], img_dimensions)
         
         window.blit(img, pygame.Rect(score_root, img_dimensions))
+    
+    # if one player has won (4 points) and the other hasn't reached 40 (3 points)
     elif player1_score >= 4 or player2_score >= 4:
         running = False
+        
+    # if only one or neither player has reached 40 (3 points)
     else:
-        img_dimensions = (int(width * 0.05), int(height * 0.05))
+        img_dimensions = (int(width * 0.05), int(height * 0.08))
 
+        # identify the proper assets based on the current score
         player1_img = pygame.transform.scale(assets[score_dict[player1_score] + suffix], img_dimensions)
         dash_img = pygame.transform.scale(assets["dash" + suffix], img_dimensions)
         player2_img = pygame.transform.scale(assets[score_dict[player2_score] + suffix], img_dimensions)
         
+        # draw the scores with a dash in between
         window.blit(player1_img, pygame.Rect(score_root, img_dimensions))
         window.blit(dash_img, pygame.Rect(score_root[0] + int(width * 0.05), score_root[1], img_dimensions[0], img_dimensions[1]))
         window.blit(player2_img, pygame.Rect(score_root[0] + int(width * 0.1), score_root[1], img_dimensions[0], img_dimensions[1]))
@@ -267,7 +280,6 @@ def init_display(title):
     return pygame.display.set_mode((width, height))
 
 
-# returns True if QUIT event is registered 
 def listen_for_quit():
     global running
     
@@ -279,23 +291,33 @@ def listen_for_quit():
 def load_assets():
     global assets
     
-    assets["icon"] = pygame.image.load(path.join("assets", "pypong_icon.png"))
-    assets["0_b"] = pygame.image.load(path.join("assets", "0_b.png"))
-    assets["0_y"] = pygame.image.load(path.join("assets", "0_y.png"))
-    assets["15_b"] = pygame.image.load(path.join("assets", "15_b.png"))
-    assets["15_y"] = pygame.image.load(path.join("assets", "15_y.png"))
-    assets["30_b"] = pygame.image.load(path.join("assets", "30_b.png"))
-    assets["30_y"] = pygame.image.load(path.join("assets", "30_y.png"))
-    assets["40_b"] = pygame.image.load(path.join("assets", "40_b.png"))
-    assets["40_y"] = pygame.image.load(path.join("assets", "40_y.png"))
-    assets["deuce_b"] = pygame.image.load(path.join("assets", "deuce_b.png"))
-    assets["deuce_y"] = pygame.image.load(path.join("assets", "deuce_y.png"))
-    assets["adin_b"] = pygame.image.load(path.join("assets", "adin_b.png"))
-    assets["adin_y"] = pygame.image.load(path.join("assets", "adin_y.png"))
-    assets["adout_b"] = pygame.image.load(path.join("assets", "adout_b.png"))
-    assets["adout_y"] = pygame.image.load(path.join("assets", "adout_y.png"))
-    assets["dash_b"] = pygame.image.load(path.join("assets", "dash_b.png"))
-    assets["dash_y"] = pygame.image.load(path.join("assets", "dash_y.png"))
+    # all images to be loaded and their paths
+    img_paths = {"icon":      path.join("assets", "pypong_icon.png"),
+                 "0_b":       path.join("assets", "0_b.png"),
+                 "0_y":       path.join("assets", "0_y.png"),
+                 "15_b":      path.join("assets", "15_b.png"),
+                 "15_y":      path.join("assets", "15_y.png"),
+                 "30_b":      path.join("assets", "30_b.png"),
+                 "30_y":      path.join("assets", "30_y.png"),
+                 "40_b":      path.join("assets", "40_b.png"),
+                 "40_y":      path.join("assets", "40_y.png"),
+                 "deuce_b":   path.join("assets", "deuce_b.png"),
+                 "deuce_y":   path.join("assets", "deuce_y.png"),
+                 "adin_b":    path.join("assets", "adin_b.png"),
+                 "adin_y":    path.join("assets", "adin_y.png"),
+                 "adout_b":   path.join("assets", "adout_b.png"),
+                 "adout_y":   path.join("assets", "adout_y.png"),
+                 "dash_b":    path.join("assets", "dash_b.png"),
+                 "dash_y":    path.join("assets", "dash_y.png")}
+    
+    for img_name in img_paths:
+        try:
+            assets[img_name] = pygame.image.load(img_paths[img_name])
+        except RuntimeError as e:
+            print(e)
+            
+            # If a file isn't found, a blank Surface will be created as a placeholder. It will show up as a black square.
+            assets[img_name] = pygame.Surface((0, 0))
 
 
 if __name__ == "__main__":
