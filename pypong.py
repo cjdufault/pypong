@@ -28,11 +28,8 @@ class Ball:
         
     # updates the position and corresponding rect for the ball
     def step_position(self):
-        before_rect = self.rect
         self.position = self.position[0] + self.x_spd, self.position[1] + self.y_spd
         self.set_rect()
-        
-        return before_rect
     
     # mirrors y_spd (for bounces off top & bottom walls, where x_spd doesn't change)
     def wall_bounce(self):
@@ -71,12 +68,9 @@ class Paddle:
         self.set_rect()
         
     def move(self, distance):
-        before_rect = self.rect
         self.position = self.position[0], self.position[1] + distance
         self.set_rect()
-        
-        return before_rect
-    
+            
     def reset_paddle(self):
         self.position = self.init_position
         self.set_rect()
@@ -151,17 +145,17 @@ def play(window):
         
         # erase everything
         draw_objects(window, object_list, back_color)
+        pygame.display.update(ball.rect)
+        update_rect_list += [paddle1.rect, paddle2.rect]
            
         # update ball position
-        update_rect_list.append(ball.step_position())
-        update_rect_list += move_paddles(paddle1, paddle2)
+        ball.step_position()
+        move_paddles(paddle1, paddle2)
         
         # check for collisions
         check_collide(ball, paddle1)
         check_collide(ball, paddle2)
-        if ball.position[1] - (ball.size / 2) <= 0: # check for collision w/ wall
-            ball.wall_bounce()
-        elif ball.position[1] + (ball.size / 2) >= height:
+        if ball.position[1] - (ball.size / 2) <= 0 or ball.position[1] + (ball.size / 2) >= height: # check for collision w/ wall
             ball.wall_bounce()
         
         # check if any player has scored
@@ -172,6 +166,7 @@ def play(window):
             pygame.display.update()
             
         else:
+            
             # draw everything and update display
             draw_objects(window, object_list, fore_color)
             update_rect_list += show_score(window)
@@ -195,8 +190,10 @@ def game_over(window):
     pygame.display.update()
     
     # if player presses y, restart, quit if they press n
-    while restart:        
+    while restart:
+        pygame.event.clear()
         event = pygame.event.wait()
+        
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_y:
                 return True
@@ -251,7 +248,10 @@ def score_animation(window, ball, paddle1, paddle2):
     draw_objects(window, object_list, back_color)
     show_score(window, negative=True)
     pygame.display.update()
+    
+    listen_for_quit()
     pygame.time.wait(1000)
+    listen_for_quit()
 
     # return objects to starting locations
     ball.reset_ball()
@@ -312,9 +312,12 @@ def show_score(window, negative=False):
         player2_img = pygame.transform.scale(assets[score_dict[player2_score] + suffix], img_dimensions)
         
         # draw the scores with a dash in between
-        update_rect_list.append(pygame.Rect(window.blit(player1_img, pygame.Rect(score_root, img_dimensions))))
-        update_rect_list.append(pygame.Rect(window.blit(dash_img, pygame.Rect(score_root[0] + int(width * 0.05), score_root[1], img_dimensions[0], img_dimensions[1]))))
-        update_rect_list.append(pygame.Rect(window.blit(player2_img, pygame.Rect(score_root[0] + int(width * 0.1), score_root[1], img_dimensions[0], img_dimensions[1]))))
+        update_rect_list.append(
+            pygame.Rect(window.blit(player1_img, pygame.Rect(score_root, img_dimensions))))
+        update_rect_list.append(
+            pygame.Rect(window.blit(dash_img, pygame.Rect(score_root[0] + int(width * 0.05), score_root[1], img_dimensions[0], img_dimensions[1]))))
+        update_rect_list.append(
+            pygame.Rect(window.blit(player2_img, pygame.Rect(score_root[0] + int(width * 0.1), score_root[1], img_dimensions[0], img_dimensions[1]))))
         
     return update_rect_list
         
@@ -326,22 +329,19 @@ def draw_objects(window, object_list, color):
     
 def move_paddles(paddle1, paddle2):
     keys = pygame.key.get_pressed()
-    update_rect_list = []
     
     # paddle1 keys
     if keys[pygame.K_w] and paddle1.position[1] - (paddle1.paddle_height / 2) >= 0:         # move up
-        update_rect_list.append(paddle1.move(0 - (width / 150)))
+        paddle1.move(0 - (width / 150))
     if keys[pygame.K_s] and paddle1.position[1] + (paddle1.paddle_height / 2) <= height:    # move down
-        update_rect_list.append(paddle1.move(width / 150))
+        paddle1.move(width / 150)
 
     # paddle2 keys
     if keys[pygame.K_UP] and paddle2.position[1] - (paddle2.paddle_height / 2) >= 0:        # move up
-        update_rect_list.append(paddle2.move(0 - (width / 150)))
+        paddle2.move(0 - (width / 150))
     if keys[pygame.K_DOWN] and paddle2.position[1] + (paddle2.paddle_height / 2) <= height: # move down
-        update_rect_list.append(paddle2.move(width / 150))
-        
-    return update_rect_list
-        
+        paddle2.move(width / 150)
+                
 
 # returns a window for the game
 def init_display(title):
