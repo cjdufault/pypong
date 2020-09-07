@@ -145,12 +145,17 @@ def play(window):
         
         # erase everything
         draw_objects(window, object_list, back_color)
-        pygame.display.update(ball.rect)
-        update_rect_list += [paddle1.rect, paddle2.rect]
+        update_rect_list += [ball.rect, paddle1.rect, paddle2.rect]
            
         # update ball position
         ball.step_position()
         move_paddles(paddle1, paddle2)
+        
+        # draw everything and update display
+        draw_objects(window, object_list, fore_color)
+        update_rect_list += show_score(window)
+        update_rect_list += [ball.rect, paddle1.rect, paddle2.rect]
+        pygame.display.update(update_rect_list)
         
         # check for collisions
         check_collide(ball, paddle1)
@@ -164,15 +169,6 @@ def play(window):
             print(f"Player 1: {player1_score}\t Player 2: {player2_score}")
             score_animation(window, ball, paddle1, paddle2)
             pygame.display.update()
-            
-        else:
-            
-            # draw everything and update display
-            draw_objects(window, object_list, fore_color)
-            update_rect_list += show_score(window)
-            update_rect_list += [ball.rect, paddle1.rect, paddle2.rect]
-            
-            pygame.display.update(update_rect_list)
             
         pygame.event.clear()
         
@@ -348,19 +344,18 @@ def init_display(title):
     global width
     global height
     
-    environ["SDL_VIDEO_CENTERED"] = "1"  # centers window in screen
+    environ["SDL_VIDEO_CENTERED"] = "1"     # centers window in screen
     pygame.init()
-    display_info = pygame.display.Info()    # object with display info
+    
     pygame.display.set_caption(title)       # set title
+    pygame.display.set_icon(assets["icon"]) # set icon
     
-    # load and set icon
-    pygame.display.set_icon(assets["icon"])
+    display_info = pygame.display.Info()    # object with display info
     
-    # set window size w/ info from display_info
-    height = int(display_info.current_h * 0.8)
-    width = int(height * 1.7)
+    width = 1200
+    height = 675
     
-    return pygame.display.set_mode((width, height))
+    return pygame.display.set_mode((width, height), flags=pygame.RESIZABLE)
 
 
 def listen_for_quit():
