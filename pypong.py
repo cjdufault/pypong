@@ -357,8 +357,8 @@ def init_display(title):
     pygame.display.set_icon(assets["icon"])
     
     # set window size w/ info from display_info
-    width = int(display_info.current_w * 0.8)
     height = int(display_info.current_h * 0.8)
+    width = int(height * 1.7)
     
     return pygame.display.set_mode((width, height))
 
