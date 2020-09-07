@@ -138,7 +138,13 @@ def play(window):
         
     while running:
         pygame.time.wait(10)
-        update_rect_list = []
+        
+        """For some reason, when the ball collides with the top wall it leaves
+        behind a 'ghost,' i.e. several pixels around its former location are
+        painted yellow for some reason I can't figure out. This updates the top
+        portion of the screen every tick, which isn't a solution, but it hides
+        the problem."""
+        update_rect_list = [pygame.Rect(0, 0, width, ball.size)]
         
         # check for quit events
         listen_for_quit()
